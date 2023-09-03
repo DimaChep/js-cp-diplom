@@ -424,12 +424,20 @@ body {
   .conf-step__chair_selected {
     transform: scale(1);
   }
-  .increase {
-    transform: scale(1.25);
-    margin-top: 25px;
+  .zoom {
+    zoom: 1.036;
   }
 }
+@media screen and (min-width: 350px) and (orientation: portrait) {
+  .zoom {
+    zoom: 1.15;
+  }
+}
+
 @media screen and (min-width: 479px) {
+  .zoom {
+    zoom: 1.5;
+  }
   .page-nav .page-nav__day {
     padding: 1rem 2rem;
   }
@@ -450,10 +458,6 @@ body {
   }
 }
 @media screen and (320px <= width <= 989px) and (orientation: landscape) {
-  .increase {
-    transform: scale(1.25);
-    margin-top: 40px;
-  }
   .conf-step__chair_selected {
     transform: scale(1.1);
   }
