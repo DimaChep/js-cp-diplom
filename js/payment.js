@@ -20,20 +20,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Клик по "Получить код бронирования"
   const acceptinButton = document.querySelector(".acceptin-button");
-  acceptinButton?.addEventListener("click", (event) => {
+  acceptinButton?.addEventListener("click", () => {
     const hallsConfigurationObj = getJSON("pre-config-halls-paid-seats");
     const hallConfiguration = hallsConfigurationObj[ticketDetails.hallId];
-    const requestData = `event=sale_add&timestamp=${ticketDetails.seanceTimeStampInSec}&hallId=${ticketDetails.hallId}&seanceId=${ticketDetails.seanceId}&hallConfiguration=${hallConfiguration}`;
+    const requestBody = `event=sale_add&timestamp=${ticketDetails.seanceTimeStampInSec}&hallId=${ticketDetails.hallId}&seanceId=${ticketDetails.seanceId}&hallConfiguration=${hallConfiguration}`;
 
     // Формируем запрос на сервер
-    sendRequest(requestData, updateHtmlPayment, true);
+    sendRequest(requestBody, updateHtmlPayment, true);
+    console.log(xhr.reaponse);
   });
 
-  acceptinButton.addEventListener("mouseenter", function () {
-    this.style.cursor = "pointer";
-  });
+  // acceptinButton.style.cursor = "pointer";
 
-  function updateHtmlPayment(responseServer) {
+  function updateHtmlPayment(serverResponse) {
     window.location.href = "ticket.html";
   }
 });

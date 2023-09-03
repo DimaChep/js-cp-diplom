@@ -1,266 +1,224 @@
-// Запускаем функцию navDays() после отрисовки страницы
+"use strict";
+
+// выполняем функции после постройки DOM
 document.addEventListener("DOMContentLoaded", () => {
-  navDays();
+  updNavCalendar();
+  sendRequest();
 });
 
-function navDays() {
-  let days = Array.from(document.getElementsByClassName("page-nav__day")); // устанавливаем дату в список выше
-  let date = new Date();
-  date.setDate(date.getDate() - 1);
+// Функция обновляет даты и подставляет дни недели
 
-  days.forEach((element) => {
-    // даты на следующие дни
-    date.setDate(date.getDate() + 1);
-    element.children[1].textContent = date.getDate();
-    switch (Number(date.getDay())) {
+function updNavCalendar() {
+  let currentTimestamp;
+
+  if (Date.now) {
+    currentTimestamp = Date.now();
+  } else if (!Date.now) {
+    Date.now = function now() {
+      currentTimestamp = new Date().getTime();
+    };
+  }
+
+  const currentDay = new Date(currentTimestamp);
+  let navDay = currentDay;
+  const htmlNavDay = document.querySelectorAll(".page-nav__day"); // поиск элемента по селектору
+  let weekDayText;
+
+  htmlNavDay.forEach((element, index) => {
+    element.dataset.timeStampDay = navDay.setHours(0, 0, 0, 0); // получаем начало дня в виде timestamp
+
+    let weekDay = navDay.getDay(); // получаем день недели
+
+    switch (weekDay) {
+      case 0: {
+        weekDayText = "Вс";
+        break;
+      }
       case 1: {
-        element.children[0].textContent = "Пн";
+        weekDayText = "Пн";
         break;
       }
       case 2: {
-        element.children[0].textContent = "Вт";
+        weekDayText = "Вт";
         break;
       }
       case 3: {
-        element.children[0].textContent = "Ср";
+        weekDayText = "Ср";
         break;
       }
       case 4: {
-        element.children[0].textContent = "Чт";
+        weekDayText = "Чт";
         break;
       }
       case 5: {
-        element.children[0].textContent = "Пт";
+        weekDayText = "Пт";
         break;
       }
       case 6: {
-        element.children[0].textContent = "Сб";
-        element.classList.add("page-nav__day_weekend");
-        break;
-      }
-      case 0: {
-        element.children[0].textContent = "Вс";
-        element.classList.add("page-nav__day_weekend");
+        weekDayText = "Сб";
         break;
       }
       default:
         break;
     }
-  });
-  let navDay = document.getElementsByClassName("page-nav")[0];
-  navDay
-    .getElementsByClassName("page-nav__day_chosen")[0]
-    .classList.toggle("page-nav__day_chosen"); // выключаем выбранный день по умолчанию
-  navDay.children[0].classList.toggle("page-nav__day_chosen"); // делаем активным сегодняшний день
 
-  let pageNavDays = Array.from(
-    document.getElementsByClassName("page-nav__day")
-  ); // смена текущей даты
-  pageNavDays.forEach((e, index) => {
-    e.onclick = function () {
-      document
-        .getElementsByClassName("page-nav__day_chosen")[0]
-        .classList.toggle("page-nav__day_chosen"); // выключаем текущий
-      e.classList.toggle("page-nav__day_chosen"); // ставим выбранный
-      selectDay.setDate(currentDate.getDate() + index);
-      setFilms(JSON.parse(localStorage.getItem("info")), selectDay); // обновляем всю информацию под выбранную дату
-    };
-  });
-}
+    const htmlNavWeekDay = element.querySelector(".page-nav__day-week");
+    const htmlNavNumberDay = element.querySelector(".page-nav__day-number");
 
-let currentDate = new Date(); // текущая дата
-let selectDay = new Date(); // выбранный день
+    htmlNavWeekDay.textContent = weekDayText;
+    htmlNavNumberDay.textContent = navDay.getDate();
 
-function startSetInfo() {
-  if (!localStorage.length) {
-    // если Веб-хранилище пустое , отправляем запрос на сервер
-    sendRequest("event=update", (info) => {
-      localStorage.setItem("info", info); // сохраняем информацию с сервера
-      localStorage.setItem("date", new Date()); // и дату сохранения файлов
-      setFilms(JSON.parse(info), selectDay); // устанавливаем фильмы
-    });
-  } else {
-    let date = new Date(localStorage.getItem("date")); // получаем дату сохранения файлов
-    if (currentDate.getDate() === date.getDate()) {
-      // если дата сегодняшняя , то получаем информацию из локальных файлов
-      let info = JSON.parse(localStorage.getItem("info")); // распарсиваем данные и устанавливаем фильмы
-      setFilms(info, selectDay);
+    if (weekDay === 0 || weekDay === 6) {
+      element.classList.add("page-nav__day_weekend");
     } else {
-      // делаем новый запрос на сервер (файлы устарели)
-      sendRequest("event=update", (info) => {
-        localStorage.setItem("info", info); // сохраняем информацию с сервера
-        localStorage.setItem("date", new Date()); // и дату сохранения файлов
-        setFilms(JSON.parse(info), selectDay); // устанавливаем фильмы
-      });
+      element.classList.remove("page-nav__day_weekend");
     }
-  }
+
+    element.classList.remove("page-nav__day_chosen");
+
+    if (index === 0) {
+      element.classList.add("page-nav__day_chosen");
+    }
+
+    navDay.setDate(navDay.getDate() + 1);
+  });
 }
 
-function setFilms(info, date) {
-  // принимает информацию с сервера либо из Веб-хранилища (localStorage), где date - конкретный и последующие дни, является Date.
-  let moviesSection = Array.from(document.getElementsByClassName("movie")); // получаем все секции с фильмами
-  let movieSection = moviesSection[0].cloneNode(true); // создаём копию 1 секции
-  let seanceHall = Array.from(
-    movieSection.getElementsByClassName("movie-seances__hall")
-  )[0].cloneNode(true); // копируем блок сеанса
-  moviesSection.forEach((element) => {
-    element.remove();
-  }); // Удаляем все блоки
-  Array.from(
-    movieSection.getElementsByClassName("movie-seances__hall")
-  ).forEach((e) => {
-    e.remove();
-  }); // удаляем информацию о сеансах
-  let main = Array.from(document.getElementsByTagName("main"))[0]; // получаем элемент main  в котором лежат секции с фильмами
+// Отправляем заапрос на сервер -  функция (тело запроса, функция callback)
+sendRequest("event=update", updateHtml);
+// Обрабатываем ответ сервера c помощью функции callback (строим html разметку):
+function updateHtml(serverResponse) {
+  const response = JSON.parse(serverResponse);
+  console.log(response);
 
-  let filmsHalls = {}; // объект , ключ - ид фильма, по ключу массив сеансов .
-  info.seances.result.forEach((e) => {
-    filmsHalls[e.seance_filmid]
-      ? filmsHalls[e.seance_filmid].push(e)
-      : (filmsHalls[e.seance_filmid] = [e]);
-  });
+  const arrayFilms = response.films.result;
+  const arrayHalls = response.halls.result.filter(
+    (item) => item.hall_open !== "0"
+  );
+  const arraySeances = response.seances.result;
 
-  let openHalls = {}; // содержит открытые залы. Где ключ - название зала (зал1....зал(N))
-  info.halls.result.forEach((e) => {
-    // ищем открытые залы
-    if (e.hall_open === "1") {
-      openHalls[e.hall_id] = e;
-    }
-  });
+  // объект конфига залов для localStorage
+  const configHalls = {};
 
-  info.films.result.forEach((element) => {
-    //добавляем новые секции (с новой инф.)
-    let newMovieSection = movieSection.cloneNode(true);
-    let curretnFilmHalls = {};
-    Array.from(
-      newMovieSection.getElementsByClassName("movie__poster-image")
-    )[0].src = element.film_poster;
-    Array.from(
-      newMovieSection.getElementsByClassName("movie__title")
-    )[0].textContent = element.film_name;
-    Array.from(
-      newMovieSection.getElementsByClassName("movie__data-duration")
-    )[0].textContent =
-      element.film_duration +
-      " " +
-      sklonenie(Number(element.film_duration), ["минута", "минуты", "минут"]);
-    Array.from(
-      newMovieSection.getElementsByClassName("movie__data-origin")
-    )[0].textContent = element.film_origin;
-    Array.from(
-      newMovieSection.getElementsByClassName("movie__synopsis")
-    )[0].textContent = element.film_description;
+  // Заполняем страницу по полученным данным
 
-    filmsHalls[element.film_id].forEach((e) => {
-      // зал и время для конкретного фильма
-      if (openHalls[e.seance_hallid]) {
-        let hall = openHalls[e.seance_hallid];
-        if (curretnFilmHalls[hall.hall_name]) {
-          curretnFilmHalls[hall.hall_name].push(e.seance_time);
-        } else {
-          curretnFilmHalls[hall.hall_name] = [e.seance_time];
+  // timestamp активного дня в навигации сохраняем в дата атрибуте, html
+  const chosenDayTimeStamp = document.querySelector("nav .page-nav__day_chosen")
+    .dataset.timeStampDay;
+  const nowTimeStamp = Date.now();
+
+  // Блок с фильмами
+  const mainSectionPage = document.querySelector("main");
+  mainSectionPage.innerHTML = "";
+
+  arrayFilms.forEach((elementFilm) => {
+    const codeHtml = `
+       <section class='movie'>
+         <div class='movie__info'>
+           <div class='movie__poster'>
+             <img class='movie__poster-image' alt='${
+               elementFilm.film_name
+             } постер' src='${elementFilm.film_poster}'>
+           </div>
+           <div class='movie__description'>
+             <h2 class='movie__title'>${elementFilm.film_name}</h2>
+             <p class='movie__synopsis'>${elementFilm.film_description}</p>
+             <p class='movie__data'>
+               <span class='movie__data-duration'>${
+                 elementFilm.film_duration
+               } ${sklonenie(Number(elementFilm.film_duration), [
+      "минута",
+      "минуты",
+      "минут",
+    ])},</span>
+               <span class='movie__data-origin'>${
+                 elementFilm.film_origin
+               }</span>
+             </p>
+           </div>
+         </div>
+       </section>
+     `;
+    mainSectionPage.insertAdjacentHTML("beforeEnd", codeHtml);
+
+    // Блок с залами
+    const movieSectionPage =
+      mainSectionPage?.querySelector(".movie:last-child");
+
+    arrayHalls.forEach((elementHall) => {
+      configHalls[elementHall.hall_id] = elementHall.hall_config;
+
+      const arraySeancesForFilmAndHall = arraySeances.filter(
+        (seance, index, array) => {
+          return (
+            seance.seance_filmid === elementFilm.film_id &&
+            seance.seance_hallid === elementHall.hall_id
+          );
         }
-      }
-    }); // теперь в curretnFilmHalls ключ - номер зала, значение - массив с датами сеансов в этом зале.
-    //{Зал1: ['10:10', '17:20'], Зал3: ['16:00'],...} по объекту на каждый фильм
+      );
 
-    let sortedHalls = {}; // сортируем залы по порядку
-    Object.keys(curretnFilmHalls)
-      .sort()
-      .forEach((key) => {
-        sortedHalls[key] = curretnFilmHalls[key];
-      });
+      // залы приходят с сервера в виде Зал1. Разделяем.
+      const hallNameText = `${elementHall.hall_name.substring(
+        0,
+        3
+      )} ${elementHall.hall_name.substring(3)}`;
 
-    Object.keys(sortedHalls).forEach((key) => {
-      // перебираем все залы и выводим информацию
-      let hall = seanceHall.cloneNode(true);
-      let ul = hall.getElementsByTagName("ul")[0];
-      let li = ul.getElementsByTagName("li")[0].cloneNode(true);
-      ul.innerHTML = "";
+      if (arraySeancesForFilmAndHall.length) {
+        const codeHtml = `
+           <div class='movie-seances__hall'>
+             <h3 class='movie-seances__hall-title'>${hallNameText}</h3>
+             <ul class='movie-seances__list'>
+             </ul>
+           </div>
+         `;
+        movieSectionPage.insertAdjacentHTML("beforeEnd", codeHtml);
 
-      hall.getElementsByTagName("h3")[0].textContent =
-        key.substring(0, 3) + " " + key.substring(3); // добавляем пробел (Зал1 => Зал 1)
+        // Блок сеансы
+        const movieSeancesList = movieSectionPage?.querySelector(
+          ".movie-seances__hall:last-child > .movie-seances__list"
+        );
 
-      sortedHalls[key].forEach((time) => {
-        // перебираем время конкретного фильма в конкретном зале
-        let currHall = Object.values(openHalls).find(
-          (hall) => hall.hall_name === key
-        ); // возвращаем текущий зал
-        let currSeance = filmsHalls[element.film_id].find((seance) => {
-          return seance.seance_time === time;
-        }); // получаем текущий сеанс по заданому времени
-        let newTime = li.cloneNode(true);
-        let refHall = newTime.children[0]; // тег <а></a>
+        arraySeancesForFilmAndHall.forEach((elementSeance) => {
+          const seanceTimeStamp =
+            +chosenDayTimeStamp + +elementSeance.seance_start * 60 * 1000;
 
-        refHall.classList.remove("acceptin-button-disabled"); //удаляем класс отключенной кнопки
-        refHall.textContent = time; // Устанавливаем всю необходимую информацию в атрибуты <а></a>
-        refHall.setAttribute("data-film-id", element.film_id); // id фильма
-        refHall.setAttribute("data-film-name", element.film_name); // название фильма
-        refHall.setAttribute(
-          "data-hall-name",
-          key.substring(0, 3) + " " + key.substring(3)
-        ); // Название зала
-        refHall.setAttribute("data-hall-id", currHall.hall_id); // id зала
-        refHall.setAttribute("data-price-vip", currHall.hall_price_vip); // цена за VIP место
-        refHall.setAttribute(
-          "data-price-standart",
-          currHall.hall_price_standart
-        ); // цена за обычное место
-        refHall.setAttribute("data-seance-id", currSeance.seance_id); // id текущего сеанса (сеанс за который будет отвечать конкретный <а></a>)
-        refHall.setAttribute("data-seance-time", currSeance.seance_time); //время сеанса
-        refHall.setAttribute("data-seance-start", currSeance.seance_start); //Время начала сеанса
-        refHall.setAttribute(
-          "data-seance-timestamp",
-          toSecond(currSeance.seance_time, date)
-        ); //timestamp
+          // Если сеанс уже прошел, то блокируем переход в hall.html
 
-        if (selectDay.getDate() === currentDate.getDate()) {
-          // выключаем сеансы, которые уже прошли
-          let timeSeance = Number(
-            refHall.getAttribute("data-seance-timestamp")
-          ); // время сеанса в секундах
-          let currentTime = Math.floor(currentDate.getTime() / 1000); // текущее время в секундах
-          if (timeSeance < currentTime) {
-            refHall.classList.add("acceptin-button-disabled");
+          if (nowTimeStamp > seanceTimeStamp) {
+            const codeHtml = `
+             <li class='movie-seances__time-block'><a class='movie-seances__time acceptin-button-disabled' href='hall.html' data-film-id=${elementFilm.film_id} data-film-name='${elementFilm.film_name}' data-hall-id=${elementHall.hall_id} data-hall-name='${hallNameText}' data-price-vip=${elementHall.hall_price_vip} data-price-standart=${elementHall.hall_price_standart} data-seance-id=${elementSeance.seance_id} data-seance-time=${elementSeance.seance_time} data-seance-start=${elementSeance.seance_start} data-seance-time-stamp=${seanceTimeStamp}>${elementSeance.seance_time}</a></li>
+           `;
+            movieSeancesList.insertAdjacentHTML("beforeEnd", codeHtml);
+          } else {
+            const codeHtml = `
+                    <li class='movie-seances__time-block'><a class='movie-seances__time' href='hall.html' data-film-id=${elementFilm.film_id} data-film-name='${elementFilm.film_name}' data-hall-id=${elementHall.hall_id} data-hall-name='${hallNameText}' data-price-vip=${elementHall.hall_price_vip} data-price-standart=${elementHall.hall_price_standart} data-seance-id=${elementSeance.seance_id} data-seance-time=${elementSeance.seance_time} data-seance-start=${elementSeance.seance_start} data-seance-time-stamp=${seanceTimeStamp}>${elementSeance.seance_time}</a></li>
+           `;
+            movieSeancesList.insertAdjacentHTML("beforeEnd", codeHtml);
           }
-        }
-
-        let requestBody = `event=get_hallConfig&timestamp=${refHall.getAttribute(
-          "data-seance-timestamp"
-        )}&hallId=${refHall.getAttribute(
-          "data-hall-id"
-        )}&seanceId=${refHall.getAttribute("data-seance-id")}`;
-
-        refHall.onclick = function () {
-          sendRequest(requestBody, (hallInfo) => {
-            sessionStorage.setItem("hallInfo", hallInfo);
-            // sessionStorage.setItem("hall_config", currHall.hall_config); // если hallInfo = null, сохраняем конфиг зала
-
-            for (let i = 0; i < refHall.attributes.length; i++) {
-              const attribute = refHall.attributes[i];
-              sessionStorage.setItem(attribute.name, attribute.value); // сохраняем все атрибуты тега <a></a>, чтобы передать их на след. страницу
-            }
-            window.location.href = "hall.html"; // устанавливаем ссылку на страницу
-          });
-          return false;
-        };
-        ul.appendChild(newTime); //добавляем новый тег <li></li>
-      });
-      newMovieSection.appendChild(hall); //добавлям новый зал в секцию с залами для фильма
+        });
+      }
     });
-    main.appendChild(newMovieSection); //добавляем блок с конкретным фильмом
   });
+
+  // Сохраним данные залов в localStorage
+  setJSON("config-halls", configHalls);
+
+  Clicks();
 }
 
-function toSecond(time, date) {
-  let [hours, minutes] = time.split(":");
-  date.setHours(hours);
-  date.setMinutes(minutes);
-  date.setSeconds(0);
-  return Math.floor(date.getTime() / 1000); // округляем в меньшую сторону
+// Поведение при клике в шапке на установленной дате
+function onDayClick(event) {
+  const htmlNavDay = document.querySelectorAll(".page-nav__day");
+  htmlNavDay.forEach((element) => {
+    element.classList.remove("page-nav__day_chosen");
+  });
+
+  event.currentTarget.classList.add("page-nav__day_chosen");
+
+  sendRequest("event=update", updateHtml);
 }
 
-// Склонение окончаний в словах Javascript:
+// Cклонение окончаний в словах на javascript:
 function sklonenie(number, titles) {
   const cases = [2, 0, 1, 1, 1, 2];
   return titles[
@@ -270,24 +228,25 @@ function sklonenie(number, titles) {
   ];
 }
 
-startSetInfo();
+// Поведение при клике по сеансу
+function onSeanceClick(event) {
+  const choseSeanceData = this.dataset;
 
-setInterval(() => {
-  // каждую секунду проверяем сеанс и обновляем текущее время
-  currentDate = new Date();
-  let acceptinButton = Array.from(
-    document.getElementsByClassName("movie-seances__time")
-  );
-  acceptinButton.forEach((e) => {
-    if (selectDay.getDate() === currentDate.getDate()) {
-      // выключаем сеансы, которые уже прошли
-      let timeSeance = Number(e.getAttribute("data-seance-timestamp")); // время сеанса в секундах
-      let currentTime = Math.floor(currentDate.getTime() / 1000); // текущее время в секундах
-      if (timeSeance < currentTime) {
-        e.classList.add("acceptin-button-disabled");
-      } else {
-        e.classList.remove("acceptin-button-disabled"); //удаляем класс отключенной кнопки
-      }
-    }
+  setJSON("data-chosen-seance", choseSeanceData);
+}
+
+function Clicks() {
+  // Клик по дате
+  const htmlNavDay = document.querySelectorAll(".page-nav__day");
+  htmlNavDay.forEach((element) => {
+    element.addEventListener("click", onDayClick);
   });
-}, 1000);
+
+  // Клик по сеансу
+  const movieSeancesStartTime = document.querySelectorAll(
+    ".movie-seances__time"
+  );
+  movieSeancesStartTime.forEach((element) => {
+    element.addEventListener("click", onSeanceClick);
+  });
+}
