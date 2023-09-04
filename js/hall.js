@@ -80,7 +80,6 @@ function updateHall(serverResponse) {
     for (const e of configStepChair) {
       if (e.classList.contains("conf-step__chair_selected")) {
         acceptionButton.removeAttribute("disabled");
-        acceptionButton.style.cursor = "pointer";
         return;
       } else {
         acceptionButton.setAttribute("disabled", "");
