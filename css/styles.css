@@ -186,6 +186,7 @@ body {
   font-size: 1.4rem;
   background-color: #16a6af;
   color: #ffffff;
+  cursor: pointer;
 }
 
 .buying {
@@ -414,7 +415,7 @@ body {
   width: 20rem;
   height: 20rem;
 }
-@media screen and (min-width: 320px) and (orientation: portrait) {
+@media screen and (min-width: 280px) and (orientation: portrait) {
   .conf-step__chair:not(:first-of-type) {
     margin-left: 1px;
   }
@@ -426,6 +427,37 @@ body {
   }
   .zoom {
     zoom: 1.036;
+  }
+}
+@media screen and (280px <= width <= 767px) and (orientation: portrait) {
+  /* Блок с днями недели */
+  .page-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .page-nav .page-nav__day {
+    margin-left: 2px;
+    margin-bottom: 2px;
+  }
+  .page-nav .page-nav__day_chosen {
+    flex-grow: 0;
+    transform: scale(1.15);
+  }
+  .page-nav .page-nav__day {
+    flex-basis: calc(100% / 5);
+  }
+  /* Блок с фильмами */
+  .movie .movie__info {
+    flex-direction: column;
+  }
+  .movie .movie__poster {
+    width: 24.5rem;
+    height: 30.5rem;
+    margin: 0 auto;
+  }
+  .movie .movie__poster .movie__poster-image {
+    width: 24.5rem;
+    height: 31.5rem;
   }
 }
 @media screen and (min-width: 350px) and (orientation: portrait) {
