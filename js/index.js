@@ -22,50 +22,17 @@ function updNavCalendar() {
   const currentDay = new Date(currentTimestamp);
   let navDay = currentDay;
   const htmlNavDay = document.querySelectorAll(".page-nav__day"); // поиск элемента по селектору
-  let weekDayText;
 
   htmlNavDay.forEach((element, index) => {
     element.dataset.timeStampDay = navDay.setHours(0, 0, 0, 0); // получаем начало дня в виде timestamp
 
-    let weekDay = navDay.getDay(); // получаем день недели
-
-    switch (weekDay) {
-      case 0: {
-        weekDayText = "Вс";
-        break;
-      }
-      case 1: {
-        weekDayText = "Пн";
-        break;
-      }
-      case 2: {
-        weekDayText = "Вт";
-        break;
-      }
-      case 3: {
-        weekDayText = "Ср";
-        break;
-      }
-      case 4: {
-        weekDayText = "Чт";
-        break;
-      }
-      case 5: {
-        weekDayText = "Пт";
-        break;
-      }
-      case 6: {
-        weekDayText = "Сб";
-        break;
-      }
-      default:
-        break;
-    }
+    let weekDay = navDay.getDay(); // получаем день недели в формате (0...6)
+    const days_mas = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
     const htmlNavWeekDay = element.querySelector(".page-nav__day-week");
     const htmlNavNumberDay = element.querySelector(".page-nav__day-number");
 
-    htmlNavWeekDay.textContent = weekDayText;
+    htmlNavWeekDay.textContent = days_mas[weekDay]; // используем weekDay в качестве индекса, чтобы получить нужный день недели
     htmlNavNumberDay.textContent = navDay.getDate();
 
     if (weekDay === 0 || weekDay === 6) {
@@ -89,7 +56,6 @@ sendRequest("event=update", updateHtml);
 // Обрабатываем ответ сервера c помощью функции callback (строим html разметку):
 function updateHtml(serverResponse) {
   const response = JSON.parse(serverResponse);
-  console.log(response);
 
   const arrayFilms = response.films.result;
   const arrayHalls = response.halls.result.filter(
