@@ -221,3 +221,10 @@ function updateHall(serverResponse) {
     confStepWrapper.classList.toggle("zoom"); //Переключаем класс zoom. Он описан в файле styles.css через медиазапросы
   }
 }
+//  Обновление страницы при возвращении на неё через кнопку "Назад" в браузере:
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && !document.cookie.match(/my-cookie/)) {
+    // Принудительное выполнение повторной загрузки, если пользователь вышел из системы.
+    location.reload();
+  }
+});
